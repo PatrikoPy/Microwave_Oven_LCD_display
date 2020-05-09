@@ -1,108 +1,93 @@
+//Sample using LiquidCrystal library
 #include <LiquidCrystal.h>
 
-/*
-  The circuit:
- * LCD RS pin to digital pin 8
- * LCD Enable pin to digital pin 9
- * LCD D4 pin to digital pin 4
- * LCD D5 pin to digital pin 5
- * LCD D6 pin to digital pin 6
- * LCD D7 pin to digital pin 7
- * LCD R/W pin to ground
-*/
+/*******************************************************
 
+  This program will test the LCD panel and the buttons
+  Mark Bramwell, July 2010
+
+********************************************************/
+
+// select the pins used on the LCD panel
 LiquidCrystal lcd(8, 9, 4, 5, 6, 7);
 
-int analogPin = A0;
-int adc_key_old;
-int adc_key_in;
-int NUM_KEYS = 5;
-int key=-1;
-int adc_key_val[5] ={30, 150, 360, 535, 760 };        
-               
-char msgs[5][15] = {"Right Key OK ", 
-                    "Up Key OK    ", 
-                    "Down Key OK  ", 
-                    "Left Key OK  ", 
-                    "Select Key OK"};
-                    
-                    
-/*******************************************************************************
-* PRIVATE FUNCTION: setup()
-*
-* PARAMETERS:
-* ~ void
-*
-* RETURN:
-* ~ void
-*
-* DESCRIPTIONS:
-* Define of I/O pin as Input or Output 
-*
-*******************************************************************************/
-// The setup() method runs once, when the sketch starts
-void setup ()
+// define some values used by the panel and buttons
+int lcd_key     = 0;
+int adc_key_in  = 0;
+#define btnRIGHT  0
+#define btnUP     1
+#define btnDOWN   2
+#define btnLEFT   3
+#define btnSELECT 4
+#define btnNONE   5
+
+// read the buttons
+int read_LCD_buttons()
 {
-  lcd.begin(16, 2);                         // set the lcd dimension
-  lcd.clear();                              // LCD screen clear
-  lcd.setCursor(0,0);              
-  lcd.print("Hello World");
-  lcd.setCursor(0,1);
-  lcd.print("Pls press any"); 
-  adc_key_old = analogRead(analogPin);      // store the unpress key value 
+  adc_key_in = analogRead(0);      // read the value from the sensor
+  // my buttons when read are centered at these valies: 0, 144, 329, 504, 741
+  // we add approx 50 to those values and check to see if we are close
+  if (adc_key_in > 1000) return btnNONE; // We make this the 1st option for speed reasons since it will be the most likely result
+
+  if (adc_key_in < 50)   return btnRIGHT;
+  if (adc_key_in < 195)  return btnUP;
+  if (adc_key_in < 380)  return btnDOWN;
+  if (adc_key_in < 555)  return btnLEFT;
+  if (adc_key_in < 790)  return btnSELECT;
+
+
+
+  return btnNONE;  // when all others fail, return this...
 }
 
+void setup()
+{
+  lcd.begin(16, 2);              // start the library
+  lcd.setCursor(0, 0);
+  lcd.print("Push the buttons"); // print a simple message
+}
 
-/*******************************************************************************
-* PRIVATE FUNCTION: loop()
-*
-* PARAMETERS:
-* ~ void
-*
-* RETURN:
-* ~ void
-*
-* DESCRIPTIONS:
-* Non-Stop looping 
-*
-*******************************************************************************/
 void loop()
 {
-  adc_key_in = analogRead(analogPin);     // read ADC value
-  adc_key_in = get_key(adc_key_in);
-  lcd.setCursor(0, 1);                 
-  lcd.print(msgs[adc_key_in]);            //display message key
-}
-  
+  lcd.setCursor(9, 1);           // move cursor to second line "1" and 9 spaces over
+  lcd.print(millis() / 1000);    // display seconds elapsed since power-up
 
-/*******************************************************************************
-* PRIVATE FUNCTION: get_key
-*
-* PARAMETERS:
-* ~ integer
-*
-* RETURN:
-* ~ unsigned int input
-*
-* DESCRIPTIONS:
-* convert the ADC value to number between 0 to 4
-*
-*******************************************************************************/
-int get_key(unsigned int input)
-{
-  int k;
-    
-  for (k = 0; k < NUM_KEYS; k++)
+
+  lcd.setCursor(0, 1);           // move to the begining of the second line
+  lcd_key = read_LCD_buttons();  // read the buttons
+
+  switch (lcd_key)               // depending on which button was pushed, we perform an action
   {
-    if (input < adc_key_val[k])
-    {
-           
-    return k;
-        }
+    case btnRIGHT:
+      {
+        lcd.print("RIGHT ");
+        break;
+      }
+    case btnLEFT:
+      {
+        lcd.print("LEFT   ");
+        break;
+      }
+    case btnUP:
+      {
+        lcd.print("UP    ");
+        break;
+      }
+    case btnDOWN:
+      {
+        lcd.print("DOWN  ");
+        break;
+      }
+    case btnSELECT:
+      {
+        lcd.print("SELECT");
+        break;
+      }
+    case btnNONE:
+      {
+        lcd.print("NONE  ");
+        break;
+      }
   }
-    
-    if (k >= NUM_KEYS)
-        k = -1;     // No valid key pressed
-    
-    return k;
+
 }
