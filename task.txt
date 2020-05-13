@@ -1,0 +1,7 @@
+Zadanie 4
+Kontroler kuchenki mikrofalowej.
+RB5 –wybór mocy 800W, 600W, 350W, 200W
+RB4 –dodanie czasu 1min
+RB3 –dodanie czasu 10s
+RB2 –Start/Stop
+RB1 –Reset
