@@ -12,9 +12,9 @@ const int interval = 1000;
 int btn     = 0;
 int analogBtnRead  = 0;
 unsigned long previousMillis = 0;
-int timer = 100;
+int timer = 0;
 short powerMode = 3; // 800W, 600W, 350W, 200W
-short mode = 0;
+bool start = false;
 
 
 // read the buttons
@@ -81,7 +81,13 @@ void DisplayPowerMode()
 void DisplayTimer(int timeLeft)
 {
   lcd.setCursor(9, 1);
-  lcd.print(timeLeft / 60);
+  if (timeLeft < 600)
+  {
+    lcd.print("0");
+    lcd.print(timeLeft / 60);
+  }
+  else
+    lcd.print(timeLeft / 60);
   lcd.print(":");
   if (timeLeft % 60 > 9)
   {
@@ -92,12 +98,19 @@ void DisplayTimer(int timeLeft)
     lcd.print("0");
     lcd.print(timeLeft % 60);
   }
-
+}
+void ClearCmdDisp()
+{
+  for (int i = 0; i < 8 ; i++)
+  {
+    lcd.setCursor(i, 1);
+    lcd.print((char) 254);
+  }
 }
 
 void setup()
 {
-  lcd.begin(16, 2);              // start the library
+  lcd.begin(16, 2);
   lcd.setCursor(0, 0);
 }
 
@@ -105,66 +118,87 @@ void loop()
 {
   unsigned long currentMillis = millis();
   DisplayPowerMode();
-  lcd.setCursor(9, 1);           // move cursor to second line "1" and 9 spaces over
-  //  lcd.print(millis() / 1000);    // display seconds elapsed since power-up
   DisplayTimer(timer);
-
-  lcd.setCursor(0, 1);           // move to the begining of the second line
-  btn = ReadLcdButtons();  // read the buttons
-
-  switch (btn)               // depending on which button was pushed, we perform an action
+  btn = ReadLcdButtons();
+  switch (btn)
   {
     case btnRIGHT: // reset
       {
+        lcd.setCursor(0, 1);
         lcd.print("RESET ");
         timer = 0;
+        start = false;
+        delay(200);
+        ClearCmdDisp();
         break;
       }
     case btnLEFT: // start/stop
       {
-        lcd.print("LEFT   ");
+        if (start == true)
+        {
+          lcd.setCursor(0, 1);
+          lcd.print("PAUSE ");
+          start = false;
+        }
+        else
+        {
+          lcd.setCursor(0, 1);
+          lcd.print("START  ");
+          start = true;
+        }
+        delay(200);
+        ClearCmdDisp();
         break;
       }
     case btnUP: // +1min
       {
+        lcd.setCursor(0, 1);
         lcd.print("+60    ");
         if (timer < 5939)
-        timer+=60;
+          timer += 60;
         else
-        timer = 5999;
+          timer = 5999;
         delay(200);
+        ClearCmdDisp();
         break;
       }
     case btnDOWN: // +10sec
       {
-        lcd.print((char) 255);
+        lcd.setCursor(0, 1);
+        lcd.print("+10");
         if (timer < 5989)
-        timer += 10;
+          timer += 10;
         else
-        timer = 5999;
+          timer = 5999;
         delay(200);
+        ClearCmdDisp();
         break;
       }
     case btnSELECT: // power mode
       {
-        lcd.print("SELECT");
+        lcd.setCursor(0, 1);
         if (powerMode == 0)
           powerMode = 3;
         else
           powerMode--;
         delay(200);
+        ClearCmdDisp();
         break;
       }
     case btnNONE:
       {
-        lcd.print("NONE  ");
         break;
       }
   }
-  if ((unsigned long)(currentMillis - previousMillis) >= interval)
+  if ((unsigned long)(currentMillis - previousMillis) >= interval && start == true)
   {
     previousMillis = currentMillis;
     timer--;
   }
-
+  if (timer == 0 && start == true)
+  {
+    start = false;
+    lcd.setCursor(0, 1);
+    lcd.print("READY ");
+  }
 }
