@@ -8,11 +8,11 @@
 // select the pins used on the LCD panel
 LiquidCrystal lcd(8, 9, 4, 5, 6, 7);
 
-// define some values used by the panel and buttons
+const int interval = 1000;
 int btn     = 0;
 int analogBtnRead  = 0;
 unsigned long previousMillis = 0;
-int timer = 0;
+int timer = 100;
 short powerMode = 3; // 800W, 600W, 350W, 200W
 short mode = 0;
 
@@ -42,7 +42,7 @@ void DisplayPowerMode()
     case 0:
       {
         lcd.print("200W ");
-         lcd.print((char) 255);
+        lcd.print((char) 255);
         lcd.print((char) 254);
         lcd.print((char) 254);
         lcd.print((char) 254);
@@ -51,7 +51,7 @@ void DisplayPowerMode()
     case 1:
       {
         lcd.print("350W ");
-         lcd.print((char) 255);
+        lcd.print((char) 255);
         lcd.print((char) 255);
         lcd.print((char) 254);
         lcd.print((char) 254);
@@ -60,7 +60,7 @@ void DisplayPowerMode()
     case 2:
       {
         lcd.print("600W ");
-         lcd.print((char) 255);
+        lcd.print((char) 255);
         lcd.print((char) 255);
         lcd.print((char) 255);
         lcd.print((char) 254);
@@ -81,18 +81,18 @@ void DisplayPowerMode()
 void DisplayTimer(int timeLeft)
 {
   lcd.setCursor(9, 1);
-  lcd.print(timeLeft/60);
+  lcd.print(timeLeft / 60);
   lcd.print(":");
-  if (timeLeft%60 > 9)
+  if (timeLeft % 60 > 9)
   {
-  lcd.print(timeLeft%60);
+    lcd.print(timeLeft % 60);
   }
   else
   {
     lcd.print("0");
-    lcd.print(timeLeft%60);
+    lcd.print(timeLeft % 60);
   }
-  
+
 }
 
 void setup()
@@ -106,8 +106,8 @@ void loop()
   unsigned long currentMillis = millis();
   DisplayPowerMode();
   lcd.setCursor(9, 1);           // move cursor to second line "1" and 9 spaces over
-//  lcd.print(millis() / 1000);    // display seconds elapsed since power-up
-DisplayTimer(millis()/1000);
+  //  lcd.print(millis() / 1000);    // display seconds elapsed since power-up
+  DisplayTimer(timer);
 
   lcd.setCursor(0, 1);           // move to the begining of the second line
   btn = ReadLcdButtons();  // read the buttons
@@ -128,21 +128,30 @@ DisplayTimer(millis()/1000);
     case btnUP: // +1min
       {
         lcd.print("+60    ");
-
+        if (timer < 5939)
+        timer+=60;
+        else
+        timer = 5999;
+        delay(200);
         break;
       }
     case btnDOWN: // +10sec
       {
         lcd.print((char) 255);
+        if (timer < 5989)
+        timer += 10;
+        else
+        timer = 5999;
+        delay(200);
         break;
       }
     case btnSELECT: // power mode
       {
         lcd.print("SELECT");
         if (powerMode == 0)
-        powerMode = 3;
+          powerMode = 3;
         else
-        powerMode--;
+          powerMode--;
         delay(200);
         break;
       }
@@ -151,6 +160,11 @@ DisplayTimer(millis()/1000);
         lcd.print("NONE  ");
         break;
       }
+  }
+  if ((unsigned long)(currentMillis - previousMillis) >= interval)
+  {
+    previousMillis = currentMillis;
+    timer--;
   }
 
 }
