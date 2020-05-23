@@ -176,6 +176,8 @@ void loop()
       }
     case btnSELECT: // power mode
       {
+        if (start == true)
+          break;
         lcd.setCursor(0, 1);
         if (powerMode == 0)
           powerMode = 3;
@@ -190,7 +192,7 @@ void loop()
         break;
       }
   }
-  if ((unsigned long)(currentMillis - previousMillis) >= interval && start == true)
+  if ((unsigned long)(currentMillis - previousMillis) >= interval && start == true && timer > 0)
   {
     previousMillis = currentMillis;
     timer--;
